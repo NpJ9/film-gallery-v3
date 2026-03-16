@@ -10,30 +10,39 @@
 // 4. Writes an updated homepage
 // ============================================
 
-const cloudinary = require('cloudinary').v2;
-const fs         = require('fs');
-const path       = require('path');
-require('dotenv').config();
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
+const path = require("path");
+require("dotenv").config();
+
+module.exports = {
+  hero: "Malaysia_2025/Malaysia_2025_1", // ← homepage hero
+  covers: {
+    Malaysia_2025: "Malaysia_2025/Malaysia_2025_2",
+    Taiwan_2025: "Taiwan_2025/Taiwan_2025_4",
+    Vietnam_2025: "Vietnam_2025/Vietnam_2025_1",
+  },
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // "Malaysia_2025" → "Malaysia"
 function toDisplayName(folderName) {
-  return folderName.split('_')[0];
+  return folderName.split("_")[0];
 }
 
 // "Malaysia_2025" → "malaysia"
 function toSlug(folderName) {
-  return folderName.split('_')[0].toLowerCase();
+  return folderName.split("_")[0].toLowerCase();
 }
 
 // "Malaysia_2025" → "2025"
 function toYear(folderName) {
-  return folderName.split('_')[1] || '';
+  return folderName.split("_")[1] || "";
 }
 
 // Fetch all root-level folders from Cloudinary
@@ -46,24 +55,24 @@ async function getFolders() {
 async function getImagesInFolder(folderPath) {
   const result = await cloudinary.search
     .expression(`folder:${folderPath}`)
-    .sort_by('public_id', 'asc')
+    .sort_by("public_id", "asc")
     .max_results(500)
     .execute();
 
   return result.resources.map((resource, index) => {
     const optimisedUrl = resource.secure_url.replace(
-      '/upload/',
-      '/upload/w_1400,q_auto,f_auto/'
+      "/upload/",
+      "/upload/w_1400,q_auto,f_auto/",
     );
     const thumbUrl = resource.secure_url.replace(
-      '/upload/',
-      '/upload/w_800,q_auto,f_auto/'
+      "/upload/",
+      "/upload/w_800,q_auto,f_auto/",
     );
     return {
-      src:    optimisedUrl,
-      thumb:  thumbUrl,
-      alt:    resource.public_id.split('/').pop().replace(/_/g, ' '),
-      number: String(index + 1).padStart(2, '0'),
+      src: optimisedUrl,
+      thumb: thumbUrl,
+      alt: resource.public_id.split("/").pop().replace(/_/g, " "),
+      number: String(index + 1).padStart(2, "0"),
     };
   });
 }
@@ -71,20 +80,26 @@ async function getImagesInFolder(folderPath) {
 // Generate a gallery sub-page
 function generateGalleryPage(folderName, images, allFolders) {
   const displayName = toDisplayName(folderName);
-  const year        = toYear(folderName);
+  const year = toYear(folderName);
 
-  const navLinks = allFolders.map(f => {
-    const slug     = toSlug(f.name);
-    const name     = toDisplayName(f.name);
-    const isActive = f.name === folderName;
-    return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ''}>${name}</a></li>`;
-  }).join('\n      ');
+  const navLinks = allFolders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      const isActive = f.name === folderName;
+      return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ""}>${name}</a></li>`;
+    })
+    .join("\n      ");
 
-  const photoItems = images.map(img => `
+  const photoItems = images
+    .map(
+      (img) => `
     <div class="photo-item" data-full="${img.src}">
       <img src="${img.thumb}" alt="${img.alt}" loading="lazy">
       <span class="photo-number">${img.number}</span>
-    </div>`).join('');
+    </div>`,
+    )
+    .join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -139,21 +154,24 @@ function generateGalleryPage(folderName, images, allFolders) {
 
 // Generate the homepage
 function generateHomepage(folders) {
-  const navLinks = folders.map(f => {
-    const slug = toSlug(f.name);
-    const name = toDisplayName(f.name);
-    return `<li><a href="${slug}/index.html">${name}</a></li>`;
-  }).join('\n      ');
+  const navLinks = folders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      return `<li><a href="${slug}/index.html">${name}</a></li>`;
+    })
+    .join("\n      ");
 
-  const cards = folders.map(f => {
-    const slug  = toSlug(f.name);
-    const name  = toDisplayName(f.name);
-    const year  = toYear(f.name);
-    const thumb = f.firstImageThumb || '';
-    return `
+  const cards = folders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      const year = toYear(f.name);
+      const thumb = f.firstImageThumb || "";
+      return `
       <a href="${slug}/index.html" class="country-card">
         <div class="card-image">
-          ${thumb ? `<img src="${thumb}" alt="${name}" loading="lazy">` : ''}
+          ${thumb ? `<img src="${thumb}" alt="${name}" loading="lazy">` : ""}
         </div>
         <div class="card-meta">
           <span class="card-title">${name}</span>
@@ -161,10 +179,11 @@ function generateHomepage(folders) {
         </div>
         <p class="card-year">${year}</p>
       </a>`;
-  }).join('');
+    })
+    .join("");
 
-  const heroImage       = folders[0]?.firstImageThumb || '';
-  const heroDisplayName = folders[0] ? toDisplayName(folders[0].name) : '';
+  const heroImage = folders[0]?.firstImageThumb || "";
+  const heroDisplayName = folders[0] ? toDisplayName(folders[0].name) : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -251,10 +270,13 @@ function generateHomepage(folders) {
 
 // Main
 async function main() {
-  console.log('🎞  Connecting to Cloudinary...');
+  console.log("🎞  Connecting to Cloudinary...");
 
   const folders = await getFolders();
-  console.log(`📁  Found ${folders.length} folders:`, folders.map(f => f.name).join(', '));
+  console.log(
+    `📁  Found ${folders.length} folders:`,
+    folders.map((f) => f.name).join(", "),
+  );
 
   for (const folder of folders) {
     const slug = toSlug(folder.name);
@@ -263,7 +285,7 @@ async function main() {
     const images = await getImagesInFolder(folder.path);
     console.log(`    Found ${images.length} images`);
 
-    folder.firstImageThumb = images[0]?.thumb || '';
+    folder.firstImageThumb = images[0]?.thumb || "";
 
     const dir = path.join(__dirname, slug);
     if (!fs.existsSync(dir)) {
@@ -271,22 +293,22 @@ async function main() {
     }
 
     const html = generateGalleryPage(folder.name, images, folders);
-    fs.writeFileSync(path.join(dir, 'index.html'), html);
+    fs.writeFileSync(path.join(dir, "index.html"), html);
     console.log(`    ✅  Written to ${slug}/index.html`);
   }
 
-  console.log('\n🏠  Generating homepage...');
+  console.log("\n🏠  Generating homepage...");
   const homepageHtml = generateHomepage(folders);
-  fs.writeFileSync(path.join(__dirname, 'index.html'), homepageHtml);
-  console.log('    ✅  Written to index.html');
+  fs.writeFileSync(path.join(__dirname, "index.html"), homepageHtml);
+  console.log("    ✅  Written to index.html");
 
-  console.log('\n✨  Done! Now run:');
-  console.log('    git add .');
+  console.log("\n✨  Done! Now run:");
+  console.log("    git add .");
   console.log('    git commit -m "generate pages"');
-  console.log('    git push');
+  console.log("    git push");
 }
 
-main().catch(err => {
-  console.error('❌  Error:', err.message);
+main().catch((err) => {
+  console.error("❌  Error:", err.message);
   process.exit(1);
 });
