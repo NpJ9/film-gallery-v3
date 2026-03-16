@@ -127,7 +127,7 @@ function generateGalleryPage(folderName, images, allFolders) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${displayName} — Film Archive</title>
+  <title>${displayName} — Jack's Photo Archive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
@@ -269,7 +269,7 @@ function generateHomepage(folders, heroImg) {
     <img class="hero-img" src="${heroSrc}" alt="Film Archive">
     <div class="hero-text">
       <p class="hero-eyebrow">35mm Film — 2025</p>
-      <h1 class="hero-title">This year.</h1>
+      <h1 class="hero-title">This year</h1>
     </div>
   </section>
 
@@ -283,9 +283,7 @@ function generateHomepage(folders, heroImg) {
   <div class="about-strip">
     <span class="about-label">About</span>
     <p class="about-text">
-      Shot on 35mm film across Southeast Asia and Taiwan.
-      All photographs taken with a film camera — grain, light leaks and all.
-      An archive of places, light, and time.
+      Shot on 35mm film in Vietnam, Taiwan and Malaysia in 2025
     </p>
   </div>
 
