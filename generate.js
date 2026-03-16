@@ -283,7 +283,7 @@ function generateHomepage(folders, heroImg) {
   <div class="about-strip">
     <span class="about-label">About</span>
     <p class="about-text">
-      Shot on 35mm film in Vietnam, Taiwan and Malaysia in 2025
+      Shot on 35mm film
     </p>
   </div>
 
