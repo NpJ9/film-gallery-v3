@@ -1,105 +1,114 @@
 // ============================================
 // FILM GALLERY — PAGE GENERATOR
-//
 // Run with: npm run generate
-//
-// What this does:
-// 1. Reads your Cloudinary folders
-// 2. Fetches all photos in each folder
-// 3. Writes an HTML gallery page per folder
-// 4. Writes an updated homepage
 // ============================================
 
-const cloudinary = require("cloudinary").v2;
-const fs = require("fs");
-const path = require("path");
-require("dotenv").config();
+const cloudinary = require('cloudinary').v2;
+const fs         = require('fs');
+const path       = require('path');
+require('dotenv').config();
 
-module.exports = {
-  hero: "Malaysia_2025/Malaysia_2025_1", // ← homepage hero
-  covers: {
-    Malaysia_2025: "Malaysia_2025/Malaysia_2025_2",
-    Taiwan_2025: "Taiwan_2025/Taiwan_2025_4",
-    Vietnam_2025: "Vietnam_2025/Vietnam_2025_1",
-  },
-};
+const config = require('./config.js');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
+  api_key:    process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// "Malaysia_2025" → "Malaysia"
-function toDisplayName(folderName) {
-  return folderName.split("_")[0];
+// ============================================
+// HELPERS
+// ============================================
+
+function toDisplayName(folderName) { return folderName.split('_')[0]; }
+function toSlug(folderName)        { return folderName.split('_')[0].toLowerCase(); }
+function toYear(folderName)        { return folderName.split('_')[1] || ''; }
+
+function buildUrl(publicId, transforms) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${transforms}/${publicId}`;
 }
 
-// "Malaysia_2025" → "malaysia"
-function toSlug(folderName) {
-  return folderName.split("_")[0].toLowerCase();
-}
+// ============================================
+// FETCH
+// ============================================
 
-// "Malaysia_2025" → "2025"
-function toYear(folderName) {
-  return folderName.split("_")[1] || "";
-}
-
-// Fetch all root-level folders from Cloudinary
 async function getFolders() {
   const result = await cloudinary.api.root_folders();
   return result.folders;
 }
 
-// Fetch all images inside a folder
 async function getImagesInFolder(folderPath) {
   const result = await cloudinary.search
     .expression(`folder:${folderPath}`)
-    .sort_by("public_id", "asc")
+    .sort_by('public_id', 'asc')
     .max_results(500)
     .execute();
 
   return result.resources.map((resource, index) => {
-    const optimisedUrl = resource.secure_url.replace(
-      "/upload/",
-      "/upload/w_1400,q_auto,f_auto/",
-    );
-    const thumbUrl = resource.secure_url.replace(
-      "/upload/",
-      "/upload/w_800,q_auto,f_auto/",
-    );
+    const id = resource.public_id;
     return {
-      src: optimisedUrl,
-      thumb: thumbUrl,
-      alt: resource.public_id.split("/").pop().replace(/_/g, " "),
-      number: String(index + 1).padStart(2, "0"),
+      publicId:    id,
+      src:         buildUrl(id, 'w_1400,q_auto,f_auto'),
+      thumb:       buildUrl(id, 'w_800,q_auto,f_auto'),
+      placeholder: buildUrl(id, 'w_20,q_1,f_auto,e_blur:800'),
+      alt:         id.split('/').pop().replace(/_/g, ' '),
+      number:      String(index + 1).padStart(2, '0'),
     };
   });
 }
 
-// Generate a gallery sub-page
+async function getImageByPublicId(publicId) {
+  if (!publicId) return null;
+  try {
+    const result = await cloudinary.api.resource(publicId);
+    const id = result.public_id;
+    return {
+      src:         buildUrl(id, 'w_1400,q_auto,f_auto'),
+      thumb:       buildUrl(id, 'w_800,q_auto,f_auto'),
+      placeholder: buildUrl(id, 'w_20,q_1,f_auto,e_blur:800'),
+    };
+  } catch (e) {
+    console.warn(`    ⚠️  Could not find image: ${publicId}`);
+    return null;
+  }
+}
+
+// ============================================
+// BLUR-UP — placeholder fades to real image
+// ============================================
+const blurUpStyles = `
+  .photo-item { background-size: cover; background-position: center; }
+  .photo-item img { opacity: 0; transition: opacity 0.4s ease; }
+  .photo-item img.loaded { opacity: 1; }
+`;
+
+const blurUpScript = `
+  document.querySelectorAll('.photo-item img').forEach(img => {
+    img.addEventListener('load', () => img.classList.add('loaded'));
+    if (img.complete) img.classList.add('loaded');
+  });
+`;
+
+// ============================================
+// GENERATE GALLERY SUB-PAGE
+// ============================================
 function generateGalleryPage(folderName, images, allFolders) {
   const displayName = toDisplayName(folderName);
-  const year = toYear(folderName);
+  const year        = toYear(folderName);
 
-  const navLinks = allFolders
-    .map((f) => {
-      const slug = toSlug(f.name);
-      const name = toDisplayName(f.name);
-      const isActive = f.name === folderName;
-      return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ""}>${name}</a></li>`;
-    })
-    .join("\n      ");
+  const navLinks = allFolders.map(f => {
+    const slug     = toSlug(f.name);
+    const name     = toDisplayName(f.name);
+    const isActive = f.name === folderName;
+    return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ''}>${name}</a></li>`;
+  }).join('\n      ');
 
-  const photoItems = images
-    .map(
-      (img) => `
-    <div class="photo-item" data-full="${img.src}">
+  const photoItems = images.map(img => `
+    <div class="photo-item" data-full="${img.src}" style="background-image:url('${img.placeholder}')">
       <img src="${img.thumb}" alt="${img.alt}" loading="lazy">
       <span class="photo-number">${img.number}</span>
-    </div>`,
-    )
-    .join("");
+    </div>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -110,18 +119,19 @@ function generateGalleryPage(folderName, images, allFolders) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <style>${blurUpStyles}</style>
 </head>
 <body>
 
   <nav>
     <span class="nav-logo">Film Archive</span>
     <ul class="nav-links">
-      <li><a href="../index.html">Index</a></li>
+      <li><a href="../index.html">Home</a></li>
       ${navLinks}
     </ul>
   </nav>
 
-  <a class="back-link" href="../index.html">← All collections</a>
+  <a class="back-link" href="../index.html">← Home</a>
 
   <header class="gallery-header">
     <h1>${displayName}</h1>
@@ -148,30 +158,30 @@ function generateGalleryPage(folderName, images, allFolders) {
   </footer>
 
   <script src="../js/lightbox.js"></script>
+  <script>${blurUpScript}</script>
 </body>
 </html>`;
 }
 
-// Generate the homepage
-function generateHomepage(folders) {
-  const navLinks = folders
-    .map((f) => {
-      const slug = toSlug(f.name);
-      const name = toDisplayName(f.name);
-      return `<li><a href="${slug}/index.html">${name}</a></li>`;
-    })
-    .join("\n      ");
+// ============================================
+// GENERATE HOMEPAGE
+// ============================================
+function generateHomepage(folders, heroImg) {
+  const navLinks = folders.map(f => {
+    const slug = toSlug(f.name);
+    const name = toDisplayName(f.name);
+    return `<li><a href="${slug}/index.html">${name}</a></li>`;
+  }).join('\n      ');
 
-  const cards = folders
-    .map((f) => {
-      const slug = toSlug(f.name);
-      const name = toDisplayName(f.name);
-      const year = toYear(f.name);
-      const thumb = f.firstImageThumb || "";
-      return `
+  const cards = folders.map(f => {
+    const slug  = toSlug(f.name);
+    const name  = toDisplayName(f.name);
+    const year  = toYear(f.name);
+    const cover = f.coverImage;
+    return `
       <a href="${slug}/index.html" class="country-card">
-        <div class="card-image">
-          ${thumb ? `<img src="${thumb}" alt="${name}" loading="lazy">` : ""}
+        <div class="card-image"${cover ? ` style="background-image:url('${cover.placeholder}')"` : ''}>
+          ${cover ? `<img src="${cover.thumb}" alt="${name}" loading="lazy">` : ''}
         </div>
         <div class="card-meta">
           <span class="card-title">${name}</span>
@@ -179,11 +189,10 @@ function generateHomepage(folders) {
         </div>
         <p class="card-year">${year}</p>
       </a>`;
-    })
-    .join("");
+  }).join('');
 
-  const heroImage = folders[0]?.firstImageThumb || "";
-  const heroDisplayName = folders[0] ? toDisplayName(folders[0].name) : "";
+  const heroSrc         = heroImg?.src         || folders[0]?.coverImage?.src         || '';
+  const heroPlaceholder = heroImg?.placeholder  || folders[0]?.coverImage?.placeholder || '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -195,8 +204,9 @@ function generateHomepage(folders) {
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .hero{position:relative;height:80vh;overflow:hidden}
-    .hero-img{width:100%;height:100%;object-fit:cover;filter:saturate(0.85) brightness(0.75)}
+    .hero{position:relative;height:80vh;overflow:hidden;background-image:url('${heroPlaceholder}');background-size:cover;background-position:center}
+    .hero-img{width:100%;height:100%;object-fit:cover;filter:saturate(0.85) brightness(0.75);opacity:0;transition:opacity 0.6s ease}
+    .hero-img.loaded{opacity:1}
     .hero-text{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:48px}
     .hero-eyebrow{color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px}
     .hero-title{font-family:var(--font-serif);font-size:clamp(40px,7vw,80px);font-weight:400;font-style:italic;color:#fff;line-height:1.1}
@@ -204,8 +214,9 @@ function generateHomepage(folders) {
     .section-label{text-transform:uppercase;font-size:10px;letter-spacing:0.2em;color:var(--muted);margin-bottom:32px;padding-bottom:12px;border-bottom:1px solid var(--border)}
     .countries-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
     .country-card{display:block;text-decoration:none;color:inherit}
-    .card-image{aspect-ratio:4/5;overflow:hidden;margin-bottom:14px;background:var(--border)}
-    .card-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease,filter 0.5s ease;filter:saturate(0.85)}
+    .card-image{aspect-ratio:4/5;overflow:hidden;margin-bottom:14px;background:var(--border);background-size:cover;background-position:center}
+    .card-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease,filter 0.5s ease,opacity 0.4s ease;filter:saturate(0.85);opacity:0}
+    .card-image img.loaded{opacity:1}
     .country-card:hover .card-image img{transform:scale(1.04);filter:saturate(1)}
     .card-meta{display:flex;justify-content:space-between;align-items:baseline}
     .card-title{font-family:var(--font-serif);font-size:20px;font-weight:400;font-style:italic}
@@ -216,6 +227,7 @@ function generateHomepage(folders) {
     .about-strip{border-top:1px solid var(--border);padding:40px;display:flex;gap:80px}
     .about-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-top:3px}
     .about-text{color:var(--muted);line-height:1.8;max-width:560px}
+    @media(max-width:900px){.countries-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:768px){
       .hero-text{padding:28px}
       .countries-section{padding:40px 20px}
@@ -230,13 +242,13 @@ function generateHomepage(folders) {
   <nav>
     <span class="nav-logo">Film Archive</span>
     <ul class="nav-links">
-      <li><a href="index.html" class="active">Index</a></li>
+      <li><a href="index.html" class="active">Home</a></li>
       ${navLinks}
     </ul>
   </nav>
 
   <section class="hero">
-    <img class="hero-img" src="${heroImage}" alt="${heroDisplayName}">
+    <img class="hero-img" src="${heroSrc}" alt="Film Archive">
     <div class="hero-text">
       <p class="hero-eyebrow">35mm Film — 2025</p>
       <h1 class="hero-title">A year<br>in Asia.</h1>
@@ -264,19 +276,28 @@ function generateHomepage(folders) {
     <span>35mm</span>
   </footer>
 
+  <script>
+    document.querySelectorAll('.hero-img, .card-image img').forEach(img => {
+      img.addEventListener('load', () => img.classList.add('loaded'));
+      if (img.complete) img.classList.add('loaded');
+    });
+  </script>
+
 </body>
 </html>`;
 }
 
-// Main
+// ============================================
+// MAIN
+// ============================================
 async function main() {
-  console.log("🎞  Connecting to Cloudinary...");
+  console.log('🎞  Connecting to Cloudinary...');
 
   const folders = await getFolders();
-  console.log(
-    `📁  Found ${folders.length} folders:`,
-    folders.map((f) => f.name).join(", "),
-  );
+  console.log(`📁  Found ${folders.length} folders:`, folders.map(f => f.name).join(', '));
+
+  console.log('\n🖼  Fetching hero image...');
+  const heroImg = await getImageByPublicId(config.hero);
 
   for (const folder of folders) {
     const slug = toSlug(folder.name);
@@ -285,30 +306,38 @@ async function main() {
     const images = await getImagesInFolder(folder.path);
     console.log(`    Found ${images.length} images`);
 
-    folder.firstImageThumb = images[0]?.thumb || "";
-
-    const dir = path.join(__dirname, slug);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    const coverId = config.covers?.[folder.name];
+    if (coverId) {
+      console.log(`    Using configured cover: ${coverId}`);
+      folder.coverImage = await getImageByPublicId(coverId);
+    } else {
+      folder.coverImage = images[0] ? {
+        src:         images[0].src,
+        thumb:       images[0].thumb,
+        placeholder: images[0].placeholder,
+      } : null;
     }
 
+    const dir = path.join(__dirname, slug);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
     const html = generateGalleryPage(folder.name, images, folders);
-    fs.writeFileSync(path.join(dir, "index.html"), html);
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
     console.log(`    ✅  Written to ${slug}/index.html`);
   }
 
-  console.log("\n🏠  Generating homepage...");
-  const homepageHtml = generateHomepage(folders);
-  fs.writeFileSync(path.join(__dirname, "index.html"), homepageHtml);
-  console.log("    ✅  Written to index.html");
+  console.log('\n🏠  Generating homepage...');
+  const homepageHtml = generateHomepage(folders, heroImg);
+  fs.writeFileSync(path.join(__dirname, 'index.html'), homepageHtml);
+  console.log('    ✅  Written to index.html');
 
-  console.log("\n✨  Done! Now run:");
-  console.log("    git add .");
-  console.log('    git commit -m "generate pages"');
-  console.log("    git push");
+  console.log('\n✨  Done! Now run:');
+  console.log('    git add .');
+  console.log('    git commit -m "update gallery"');
+  console.log('    git push');
 }
 
-main().catch((err) => {
-  console.error("❌  Error:", err.message);
+main().catch(err => {
+  console.error('❌  Error:', err.message);
   process.exit(1);
 });
