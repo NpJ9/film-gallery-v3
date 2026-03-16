@@ -3,16 +3,16 @@
 // Run with: npm run generate
 // ============================================
 
-const cloudinary = require('cloudinary').v2;
-const fs         = require('fs');
-const path       = require('path');
-require('dotenv').config();
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
+const path = require("path");
+require("dotenv").config();
 
-const config = require('./config.js');
+const config = require("./config.js");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
@@ -20,9 +20,15 @@ cloudinary.config({
 // HELPERS
 // ============================================
 
-function toDisplayName(folderName) { return folderName.split('_')[0]; }
-function toSlug(folderName)        { return folderName.split('_')[0].toLowerCase(); }
-function toYear(folderName)        { return folderName.split('_')[1] || ''; }
+function toDisplayName(folderName) {
+  return folderName.split("_")[0];
+}
+function toSlug(folderName) {
+  return folderName.split("_")[0].toLowerCase();
+}
+function toYear(folderName) {
+  return folderName.split("_")[1] || "";
+}
 
 function buildUrl(publicId, transforms) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -41,19 +47,19 @@ async function getFolders() {
 async function getImagesInFolder(folderPath) {
   const result = await cloudinary.search
     .expression(`folder:${folderPath}`)
-    .sort_by('public_id', 'asc')
+    .sort_by("public_id", "asc")
     .max_results(500)
     .execute();
 
   return result.resources.map((resource, index) => {
     const id = resource.public_id;
     return {
-      publicId:    id,
-      src:         buildUrl(id, 'w_1400,q_auto,f_auto'),
-      thumb:       buildUrl(id, 'w_800,q_auto,f_auto'),
-      placeholder: buildUrl(id, 'w_20,q_1,f_auto,e_blur:800'),
-      alt:         id.split('/').pop().replace(/_/g, ' '),
-      number:      String(index + 1).padStart(2, '0'),
+      publicId: id,
+      src: buildUrl(id, "w_1400,q_auto,f_auto"),
+      thumb: buildUrl(id, "w_800,q_auto,f_auto"),
+      placeholder: buildUrl(id, "w_20,q_1,f_auto,e_blur:800"),
+      alt: id.split("/").pop().replace(/_/g, " "),
+      number: String(index + 1).padStart(2, "0"),
     };
   });
 }
@@ -64,9 +70,9 @@ async function getImageByPublicId(publicId) {
     const result = await cloudinary.api.resource(publicId);
     const id = result.public_id;
     return {
-      src:         buildUrl(id, 'w_1400,q_auto,f_auto'),
-      thumb:       buildUrl(id, 'w_800,q_auto,f_auto'),
-      placeholder: buildUrl(id, 'w_20,q_1,f_auto,e_blur:800'),
+      src: buildUrl(id, "w_1400,q_auto,f_auto"),
+      thumb: buildUrl(id, "w_800,q_auto,f_auto"),
+      placeholder: buildUrl(id, "w_20,q_1,f_auto,e_blur:800"),
     };
   } catch (e) {
     console.warn(`    ⚠️  Could not find image: ${publicId}`);
@@ -95,20 +101,26 @@ const blurUpScript = `
 // ============================================
 function generateGalleryPage(folderName, images, allFolders) {
   const displayName = toDisplayName(folderName);
-  const year        = toYear(folderName);
+  const year = toYear(folderName);
 
-  const navLinks = allFolders.map(f => {
-    const slug     = toSlug(f.name);
-    const name     = toDisplayName(f.name);
-    const isActive = f.name === folderName;
-    return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ''}>${name}</a></li>`;
-  }).join('\n      ');
+  const navLinks = allFolders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      const isActive = f.name === folderName;
+      return `<li><a href="../${slug}/index.html"${isActive ? ' class="active"' : ""}>${name}</a></li>`;
+    })
+    .join("\n      ");
 
-  const photoItems = images.map(img => `
+  const photoItems = images
+    .map(
+      (img) => `
     <div class="photo-item" data-full="${img.src}" style="background-image:url('${img.placeholder}')">
       <img src="${img.thumb}" alt="${img.alt}" loading="lazy">
       <span class="photo-number">${img.number}</span>
-    </div>`).join('');
+    </div>`,
+    )
+    .join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -168,21 +180,24 @@ function generateGalleryPage(folderName, images, allFolders) {
 // GENERATE HOMEPAGE
 // ============================================
 function generateHomepage(folders, heroImg) {
-  const navLinks = folders.map(f => {
-    const slug = toSlug(f.name);
-    const name = toDisplayName(f.name);
-    return `<li><a href="${slug}/index.html">${name}</a></li>`;
-  }).join('\n      ');
+  const navLinks = folders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      return `<li><a href="${slug}/index.html">${name}</a></li>`;
+    })
+    .join("\n      ");
 
-  const cards = folders.map(f => {
-    const slug  = toSlug(f.name);
-    const name  = toDisplayName(f.name);
-    const year  = toYear(f.name);
-    const cover = f.coverImage;
-    return `
+  const cards = folders
+    .map((f) => {
+      const slug = toSlug(f.name);
+      const name = toDisplayName(f.name);
+      const year = toYear(f.name);
+      const cover = f.coverImage;
+      return `
       <a href="${slug}/index.html" class="country-card">
-        <div class="card-image"${cover ? ` style="background-image:url('${cover.placeholder}')"` : ''}>
-          ${cover ? `<img src="${cover.thumb}" alt="${name}" loading="lazy">` : ''}
+        <div class="card-image"${cover ? ` style="background-image:url('${cover.placeholder}')"` : ""}>
+          ${cover ? `<img src="${cover.thumb}" alt="${name}" loading="lazy">` : ""}
         </div>
         <div class="card-meta">
           <span class="card-title">${name}</span>
@@ -190,10 +205,12 @@ function generateHomepage(folders, heroImg) {
         </div>
         <p class="card-year">${year}</p>
       </a>`;
-  }).join('');
+    })
+    .join("");
 
-  const heroSrc         = heroImg?.src         || folders[0]?.coverImage?.src         || '';
-  const heroPlaceholder = heroImg?.placeholder  || folders[0]?.coverImage?.placeholder || '';
+  const heroSrc = heroImg?.src || folders[0]?.coverImage?.src || "";
+  const heroPlaceholder =
+    heroImg?.placeholder || folders[0]?.coverImage?.placeholder || "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -293,12 +310,15 @@ function generateHomepage(folders, heroImg) {
 // MAIN
 // ============================================
 async function main() {
-  console.log('🎞  Connecting to Cloudinary...');
+  console.log("🎞  Connecting to Cloudinary...");
 
   const folders = await getFolders();
-  console.log(`📁  Found ${folders.length} folders:`, folders.map(f => f.name).join(', '));
+  console.log(
+    `📁  Found ${folders.length} folders:`,
+    folders.map((f) => f.name).join(", "),
+  );
 
-  console.log('\n🖼  Fetching hero image...');
+  console.log("\n🖼  Fetching hero image...");
   const heroImg = await getImageByPublicId(config.hero);
 
   for (const folder of folders) {
@@ -313,33 +333,35 @@ async function main() {
       console.log(`    Using configured cover: ${coverId}`);
       folder.coverImage = await getImageByPublicId(coverId);
     } else {
-      folder.coverImage = images[0] ? {
-        src:         images[0].src,
-        thumb:       images[0].thumb,
-        placeholder: images[0].placeholder,
-      } : null;
+      folder.coverImage = images[0]
+        ? {
+            src: images[0].src,
+            thumb: images[0].thumb,
+            placeholder: images[0].placeholder,
+          }
+        : null;
     }
 
     const dir = path.join(__dirname, slug);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
     const html = generateGalleryPage(folder.name, images, folders);
-    fs.writeFileSync(path.join(dir, 'index.html'), html);
+    fs.writeFileSync(path.join(dir, "index.html"), html);
     console.log(`    ✅  Written to ${slug}/index.html`);
   }
 
-  console.log('\n🏠  Generating homepage...');
+  console.log("\n🏠  Generating homepage...");
   const homepageHtml = generateHomepage(folders, heroImg);
-  fs.writeFileSync(path.join(__dirname, 'index.html'), homepageHtml);
-  console.log('    ✅  Written to index.html');
+  fs.writeFileSync(path.join(__dirname, "index.html"), homepageHtml);
+  console.log("    ✅  Written to index.html");
 
-  console.log('\n✨  Done! Now run:');
-  console.log('    git add .');
+  console.log("\n✨  Done! Now run:");
+  console.log("    git add .");
   console.log('    git commit -m "update gallery"');
-  console.log('    git push');
+  console.log("    git push");
 }
 
-main().catch(err => {
-  console.error('❌  Error:', err.message);
+main().catch((err) => {
+  console.error("❌  Error:", err.message);
   process.exit(1);
 });

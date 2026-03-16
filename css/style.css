@@ -292,7 +292,7 @@ footer {
   font-size: 22px;
   cursor: pointer;
   padding: 20px;
-  transition: color 0.2s;
+  transition: color 100ms;
   font-family: var(--font-mono);
 }
 
