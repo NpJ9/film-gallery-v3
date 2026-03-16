@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Film — A Travel Archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero{position:relative;height:80vh;overflow:hidden}
+    .hero-img{width:100%;height:100%;object-fit:cover;filter:saturate(0.85) brightness(0.75)}
+    .hero-text{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:48px}
+    .hero-eyebrow{color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px}
+    .hero-title{font-family:var(--font-serif);font-size:clamp(40px,7vw,80px);font-weight:400;font-style:italic;color:#fff;line-height:1.1}
+    .countries-section{padding:64px 40px}
+    .section-label{text-transform:uppercase;font-size:10px;letter-spacing:0.2em;color:var(--muted);margin-bottom:32px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+    .countries-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .country-card{display:block;text-decoration:none;color:inherit}
+    .card-image{aspect-ratio:4/5;overflow:hidden;margin-bottom:14px;background:var(--border)}
+    .card-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease,filter 0.5s ease;filter:saturate(0.85)}
+    .country-card:hover .card-image img{transform:scale(1.04);filter:saturate(1)}
+    .card-meta{display:flex;justify-content:space-between;align-items:baseline}
+    .card-title{font-family:var(--font-serif);font-size:20px;font-weight:400;font-style:italic}
+    .card-count{color:var(--muted);font-size:11px}
+    .card-year{color:var(--muted);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px}
+    .card-arrow{display:inline-block;transition:transform 0.2s}
+    .country-card:hover .card-arrow{transform:translateX(4px)}
+    .about-strip{border-top:1px solid var(--border);padding:40px;display:flex;gap:80px}
+    .about-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-top:3px}
+    .about-text{color:var(--muted);line-height:1.8;max-width:560px}
+    @media(max-width:768px){
+      .hero-text{padding:28px}
+      .countries-section{padding:40px 20px}
+      .countries-grid{grid-template-columns:1fr;gap:40px}
+      .card-image{aspect-ratio:3/2}
+      .about-strip{flex-direction:column;gap:16px;padding:32px 20px}
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="nav-logo">Film Archive</span>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Index</a></li>
+      <li><a href="malaysia/index.html">Malaysia</a></li>
+      <li><a href="taiwan/index.html">Taiwan</a></li>
+      <li><a href="vietnam/index.html">Vietnam</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <img class="hero-img" src="https://res.cloudinary.com/dtin3lqlp/image/upload/w_800,q_auto,f_auto/v1773665573/Malaysia_2025_10_jx5czm.jpg" alt="Malaysia">
+    <div class="hero-text">
+      <p class="hero-eyebrow">35mm Film — 2025</p>
+      <h1 class="hero-title">A year<br>in Asia.</h1>
+    </div>
+  </section>
+
+  <section class="countries-section">
+    <p class="section-label">Collections</p>
+    <div class="countries-grid">
+      
+      <a href="malaysia/index.html" class="country-card">
+        <div class="card-image">
+          <img src="https://res.cloudinary.com/dtin3lqlp/image/upload/w_800,q_auto,f_auto/v1773665573/Malaysia_2025_10_jx5czm.jpg" alt="Malaysia" loading="lazy">
+        </div>
+        <div class="card-meta">
+          <span class="card-title">Malaysia</span>
+          <span class="card-count">— <span class="card-arrow">→</span></span>
+        </div>
+        <p class="card-year">2025</p>
+      </a>
+      <a href="taiwan/index.html" class="country-card">
+        <div class="card-image">
+          <img src="https://res.cloudinary.com/dtin3lqlp/image/upload/w_800,q_auto,f_auto/v1773665581/Taiwan_2025_10_yemvqx.jpg" alt="Taiwan" loading="lazy">
+        </div>
+        <div class="card-meta">
+          <span class="card-title">Taiwan</span>
+          <span class="card-count">— <span class="card-arrow">→</span></span>
+        </div>
+        <p class="card-year">2025</p>
+      </a>
+      <a href="vietnam/index.html" class="country-card">
+        <div class="card-image">
+          <img src="https://res.cloudinary.com/dtin3lqlp/image/upload/w_800,q_auto,f_auto/v1773665614/Vietnam_2025_10_fkkzsh.jpg" alt="Vietnam" loading="lazy">
+        </div>
+        <div class="card-meta">
+          <span class="card-title">Vietnam</span>
+          <span class="card-count">— <span class="card-arrow">→</span></span>
+        </div>
+        <p class="card-year">2025</p>
+      </a>
+    </div>
+  </section>
+
+  <div class="about-strip">
+    <span class="about-label">About</span>
+    <p class="about-text">
+      Shot on 35mm film across Southeast Asia and Taiwan.
+      All photographs taken with a film camera — grain, light leaks and all.
+      An archive of places, light, and time.
+    </p>
+  </div>
+
+  <footer>
+    <span>Film Archive — 2025</span>
+    <span>35mm</span>
+  </footer>
+
+</body>
+</html>

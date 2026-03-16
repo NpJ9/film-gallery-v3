@@ -1,0 +1,12 @@
+{
+  "name": "film-gallery",
+  "version": "1.0.0",
+  "description": "Film photo gallery generator",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.5"
+  }
+}
