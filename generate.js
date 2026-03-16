@@ -158,6 +158,7 @@ function generateGalleryPage(folderName, images, allFolders) {
   </footer>
 
   <script src="../js/lightbox.js"></script>
+  <script src="../js/grain.js"></script>
   <script>${blurUpScript}</script>
 </body>
 </html>`;
@@ -251,7 +252,7 @@ function generateHomepage(folders, heroImg) {
     <img class="hero-img" src="${heroSrc}" alt="Film Archive">
     <div class="hero-text">
       <p class="hero-eyebrow">35mm Film — 2025</p>
-      <h1 class="hero-title">A year<br>in Asia.</h1>
+      <h1 class="hero-title">This year.</h1>
     </div>
   </section>
 
@@ -283,6 +284,7 @@ function generateHomepage(folders, heroImg) {
     });
   </script>
 
+  <script src="js/grain.js"></script>
 </body>
 </html>`;
 }

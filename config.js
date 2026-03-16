@@ -14,10 +14,16 @@
 // ============================================
 
 module.exports = {
-  hero: "Taiwan_2025_40_axobsy",
+
+  // The large background image at the top of the homepage
+  hero: 'Malaysia_2025/Malaysia_2025_14',
+
+  // The cover photo shown on each country card
+  // Key = folder name, Value = public_id of your chosen photo
   covers: {
-    Malaysia_2025: "Malaysia_2025_14",
-    Taiwan_2025: "Taiwan_2025_57_sl4znp",
-    Vietnam_2025: "Vietnam_2025_62_srw8zu",
+    Malaysia_2025: 'Malaysia_2025/Malaysia_2025_14',
+    Taiwan_2025:   'Taiwan_2025/Taiwan_2025_47',
+    Vietnam_2025:  'Vietnam_2025/Vietnam_2025_1',
   },
+
 };
